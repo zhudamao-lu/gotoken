@@ -100,7 +100,7 @@ func GetCurrentToken(u string, endian int) (*token, error) {
 func createToken(u string, vt int64) *token {
 	currentTimeStamp := time.Now().UnixNano()
 	sum := sha256.Sum256([]byte(u + strconv.FormatInt(currentTimeStamp, 16)))
-	t := &token{sum, currentTimeStamp, vt * 1000, hex.EncodeToString(sum[:])}
+	t := &token{sum, currentTimeStamp, vt * 1000000000, hex.EncodeToString(sum[:])}
 
 	return t
 }
@@ -118,7 +118,7 @@ func (t *token)Validation(code string) bool {
 	}
 
 	// 判断令牌是否超时
-	if(time.Now().UnixNano() - t.createTimestamp <= t.validTime) {
+	if(time.Now().UnixNano() - t.createTimestamp > t.validTime) {
 		return false
 	}
 
