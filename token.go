@@ -18,13 +18,17 @@ func (hC hashCode) String() string {
 // 令牌结构
 type token struct {
 	code [32]byte // 通过唯一标志和当前时间生成的哈希码
-	createTimeStamp int64 // 创建时间和更新时间戳
+	createTimestamp int64 // 创建时间和更新时间戳
 	validTime int64 // 有效时间戳
 	Code string `json:"code"` // 哈希码16进制字符串的表示
 }
 
 // 创建一个令牌，如果参数endian = -1，则表示单端令牌模式，否则为多端
 func New(u string, vt int64, endian int) (*token, error) {
+	if endian < -1 || endian > 3 {
+		return nil, &tokenErr{"端号超出范围, [-1, 3]"}
+	}
+
 	if endian == -1 {
 		token, err := newSingle(u, vt)
 		if err != nil {
@@ -34,11 +38,8 @@ func New(u string, vt int64, endian int) (*token, error) {
 		return token, nil
 	}
 
-	var tErr error
-
 	if singleMode {
-		tErr = &tokenErr{"已经在单令牌模式运行"}
-		return nil, tErr
+		return nil, &tokenErr{"已经在单令牌模式运行"}
 	}
 
 	tokenArray := [4]*token{}
@@ -51,11 +52,9 @@ func New(u string, vt int64, endian int) (*token, error) {
 
 // 创建一个单端模式令牌
 func newSingle(u string, vt int64) (*token, error) {
-	var tErr error
 	if !singleMode {
 		if len(tokens) != 0 {
-			tErr = &tokenErr{"已经在多端令牌模式运行"}
-			return nil, tErr
+			return nil, &tokenErr{"已经在多端令牌模式运行"}
 		}
 
 		singleMode = true
@@ -74,22 +73,19 @@ func GetCurrentToken(u string, endian int) (*token, error) {
 		return nil, nil
 	}
 
-	var tErr error
-
 	switch ts.(type) {
 	case [4]*token:
 		if endian == -1 {
-			tErr = &tokenErr{"已经在多端令牌模式运行, 未传入端号"}
-			return nil, tErr
+			return nil, &tokenErr{"已经在多端令牌模式运行"}
 		}
 		return ts.([4]*token)[endian], nil
 	case *token:
 		if endian != -1 {
-			tErr = &tokenErr{"已经在单令牌模式运行, 传入多余的端号"}
-			return nil, tErr
+			return nil, &tokenErr{"已经在单令牌模式运行"}
 		}
 		return ts.(*token), nil
 	default:
+		var tErr error
 		if endian != -1 {
 			tErr = &tokenErr{"令牌类型不正确, 需要[4]*token, 得到" + fmt.Sprintf("%v", reflect.TypeOf(ts))}
 		}
@@ -111,7 +107,7 @@ func createToken(u string, vt int64) *token {
 
 // 获取令牌创建时间 暂时没啥用
 func (t *token) GetCreateTimeStamp() int64 {
-	return t.createTimeStamp
+	return t.createTimestamp
 }
 
 // 令牌校验
@@ -122,16 +118,16 @@ func (t *token)Validation(code string) bool {
 	}
 
 	// 判断令牌是否超时
-	if(time.Now().UnixNano() - t.createTimeStamp <= t.validTime) {
+	if(time.Now().UnixNano() - t.createTimestamp <= t.validTime) {
 		return false
 	}
 
-	t.createTimeStamp = time.Now().UnixNano()
+	t.createTimestamp = time.Now().UnixNano()
 	return true
 }
 
 func (t *token)Update(u string) {
-	t.code = sha256.Sum256([]byte(u + strconv.FormatInt(t.createTimeStamp, 16)))
+	t.code = sha256.Sum256([]byte(u + strconv.FormatInt(t.createTimestamp, 16)))
 	t.Code = hex.EncodeToString(t.code[:])
 }
 
