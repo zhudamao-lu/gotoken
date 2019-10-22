@@ -89,7 +89,7 @@ func GetCurrentToken(u string, endian int) (*token, error) {
 func createToken(u string, vt int64) *token {
 	currentTimeStamp := time.Now().UnixNano()
 	sum := sha256.Sum256([]byte(u + strconv.FormatInt(currentTimeStamp, 16)))
-	t := &token{sum, currentTimeStamp, vt * 1000000, hex.EncodeToString(sum[:])}
+	t := &token{sum, currentTimeStamp, vt * 1000, hex.EncodeToString(sum[:])}
 
 	return t
 }
@@ -98,8 +98,10 @@ func (t *token) GetCreateTimeStamp() int64 {
 	return t.createTimeStamp
 }
 
-func (t *token)validation(u string) bool {
-	if(sha256.Sum256([]byte(u + strconv.FormatInt(t.createTimeStamp, 16))) != t.code) {
+func (t *token)Validation(u string) bool {
+	code := sha256.Sum256([]byte(u + strconv.FormatInt(t.createTimeStamp, 16)))
+
+	if hex.EncodeToString(code[:]) != hex.EncodeToString(t.code[:]) {
 		return false
 	}
 
