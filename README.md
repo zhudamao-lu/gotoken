@@ -33,7 +33,6 @@ if err != nil {
 }
 ```
 * 创建一个单端登陆的令牌
->>>>>>> 95a8ba5bad7722dc9a49c61c67a5fb65570646f0
 ```
 token, err := gotoken.New("user", 300, TOKEN_SINGLE)
 if err != nil {
