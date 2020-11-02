@@ -45,13 +45,10 @@ func TestToken(t *testing.T) {
 
 	t.Log(token)
 
-	ok := token.Validation(token.Code) // 模拟登陆后调用API时校验令牌
+	ok := token.ValidationSingle("mosalut", token.Code) // 模拟登陆后调用API时校验令牌
 	t.Log(ok)
 
-	token.Update("mosalut") // 如果需要，可以更新令牌
+//	token.Update("mosalut") // 如果需要，可以更新令牌
 
 	t.Log(token)
-
-	ok = token.Validation(token.Code)
-	t.Log(ok)
 }

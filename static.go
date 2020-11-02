@@ -6,7 +6,6 @@ const (
 	TOKEN_APP = 1
 	TOKEN_PC = 2
 	TOKEN_OTHERS = 3
-
 )
 
 var (

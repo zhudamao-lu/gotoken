@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"reflect"
 	"time"
+	"log"
 	"fmt"
 )
 
@@ -44,7 +45,6 @@ func New(u string, vt int64, endian int) (*token, error) {
 
 	tokenArray := [4]*token{}
 	tokenArray[endian] = createToken(u, vt)
-	tokens[u] = [4]*token{}
 	tokens[u] = tokenArray
 
 	return tokenArray[endian], nil
@@ -110,8 +110,8 @@ func (t *token) GetCreateTimeStamp() int64 {
 	return t.createTimestamp
 }
 
-// 令牌校验
-func (t *token)Validation(code string) bool {
+// 单令牌模式校验
+func (t *token) ValidationSingle(u, code string) bool {
 	// 判断令牌的哈希码的16进制字符串表示和传来的code是否相等
 	if code != t.Code {
 		return false
@@ -119,6 +119,7 @@ func (t *token)Validation(code string) bool {
 
 	// 判断令牌是否超时
 	if(time.Now().UnixNano() - t.createTimestamp > t.validTime) {
+		delete(tokens, u)
 		return false
 	}
 
@@ -126,7 +127,35 @@ func (t *token)Validation(code string) bool {
 	return true
 }
 
-func (t *token)Update(u string) {
+// 多令牌模式校验
+func (t *token) Validation(u, code string, endian int) bool {
+	// 判断令牌的哈希码的16进制字符串表示和传来的code是否相等
+	if code != t.Code {
+		return false
+	}
+
+	// 判断令牌是否超时
+	if(time.Now().UnixNano() - t.createTimestamp > t.validTime) {
+		/* 如果所有端都没有token 删除tokens[u] */
+		log.Println(tokens[u].([4]*token))
+		tokenEndian := tokens[u].([4]*token)[endian]
+		tokenEndian = nil
+		for _, v := range tokens[u].([4]*token) {
+			if v != tokenEndian {
+				return false
+			}
+		}
+		// 这里删除
+
+		delete(tokens, u)
+		return false
+	}
+
+	t.createTimestamp = time.Now().UnixNano()
+	return true
+}
+
+func (t *token) Update(u string) {
 	t.code = sha256.Sum256([]byte(u + strconv.FormatInt(t.createTimestamp, 16)))
 	t.Code = hex.EncodeToString(t.code[:])
 }
