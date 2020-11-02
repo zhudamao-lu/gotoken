@@ -7,7 +7,7 @@ gotoken
 
 # 安装
 ```
-go get github.com/hack-mosalut/gotoken
+go get github.com/mosalut/gotoken
 ```
 
 # 使用
