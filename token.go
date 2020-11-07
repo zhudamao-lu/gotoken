@@ -137,7 +137,7 @@ func (t *token) Validation(u, code string, endian int) bool {
 	// 判断令牌是否超时
 	if(time.Now().UnixNano() - t.createTimestamp > t.validTime) {
 		/* 如果所有端都没有token 删除tokens[u] */
-		log.Println(tokens[u].([4]*token))
+	//	log.Println(tokens[u].([4]*token))
 		tokenEndian := tokens[u].([4]*token)[endian]
 		tokenEndian = nil
 		for _, v := range tokens[u].([4]*token) {
